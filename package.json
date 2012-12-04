@@ -1,0 +1,26 @@
+{
+  "name": "winston-s3",
+  "version": "0.0.1",
+  "description": "S3 transport for Winston",
+  "main": "index.js",
+  "dependencies": {
+    "winston": "~0.6.2",
+    "aws2js": "~0.7.8",
+    "knox": "~0.4.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PinionTech/winston-s3.git"
+  },
+  "keywords": [
+    "winston",
+    "s3",
+    "logging"
+  ],
+  "author": "Andrew Harvey",
+  "license": "BSD"
+}
