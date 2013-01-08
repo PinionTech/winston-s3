@@ -25,14 +25,25 @@ class winston.transports.S3 extends winston.Transport
     @bufferSize = 0
     @maxSize = opts.maxSize || 20 * 1024 * 1024
     @_id = opts.id || (require 'os').hostname
+    @_nested = opts.nested || false
 
   log: (level, msg='', meta, cb) ->
     cb null, true if @silent
-    item = JSON.stringify
-            level: level
-            msg: msg
-            time: new Date().toISOString()
-            id: @_id
+    if @_nested
+      item =
+        level: level
+        msg: msg
+        time: new Date().toISOString()
+        id: @_id
+    else
+      msg = {msg: msg} if typeof msg =='string'
+      item = msg
+      item.s3_level = level
+      item.s3_time = new Date().toISOString()
+      item.s3_id = @_id
+
+    item = JSON.stringify(item) + '\n'
+
     @open (newFileRequired) =>
       @bufferSize += item.length
       @_stream.write item
