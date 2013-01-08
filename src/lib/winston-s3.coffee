@@ -1,14 +1,12 @@
 knox = require 'knox'
 winston = require 'winston'
 fs = require 'fs'
-os = require 'os'
 uuid = require 'node-uuid'
 findit = require 'findit'
 path = require 'path'
 fork = require('child_process').fork
 TempFile = () ->
   return fs.createWriteStream path.join __dirname, 's3logs', 's3logger_' + new Date().toISOString()
-hostname = os.hostname()
 module.exports =
 class winston.transports.S3 extends winston.Transport
   name: 's3'
@@ -26,6 +24,7 @@ class winston.transports.S3 extends winston.Transport
     }
     @bufferSize = 0
     @maxSize = opts.maxSize || 20 * 1024 * 1024
+    @_id = opts.id || (require 'os').hostname
 
   log: (level, msg='', meta, cb) ->
     cb null, true if @silent
@@ -33,7 +32,7 @@ class winston.transports.S3 extends winston.Transport
             level: level
             msg: msg
             time: new Date().toISOString()
-            from: hostname
+            id: @_id
     @open (newFileRequired) =>
       @bufferSize += item.length
       @_stream.write item
@@ -61,7 +60,7 @@ class winston.transports.S3 extends winston.Transport
 
   _s3Path: ->
     d = new Date
-    "/#{d.getUTCFullYear()}/#{d.getUTCMonth() + 1}/#{d.getUTCDate()}/#{d.toISOString()}_#{hostname}_#{uuid.v4().slice(0,8)}.json"
+    "/#{d.getUTCFullYear()}/#{d.getUTCMonth() + 1}/#{d.getUTCDate()}/#{d.toISOString()}_#{@_id}_#{uuid.v4().slice(0,8)}.json"
 
   checkUnshipped: ->
     unshippedFiles = findit.find path.join __dirname, 's3logs'
