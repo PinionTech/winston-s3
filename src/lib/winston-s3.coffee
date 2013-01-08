@@ -1,6 +1,14 @@
 knox = require 'knox'
 winston = require 'winston'
-TempFile = require 'temporary/file'
+fs = require 'fs'
+os = require 'os'
+uuid = require 'node-uuid'
+findit = require 'findit'
+path = require 'path'
+fork = require('child_process').fork
+TempFile = () ->
+  return fs.createWriteStream path.join __dirname, 's3logs', 's3logger_' + new Date().toISOString()
+hostname = os.hostname()
 module.exports =
 class winston.transports.S3 extends winston.Transport
   name: 's3'
@@ -8,14 +16,29 @@ class winston.transports.S3 extends winston.Transport
   constructor: (opts={}) ->
     super
 
-    @client = knox.createClient key: opts.key,
-                                secret: opts.secret,
-                                bucket: opts.bucket
+    fs.mkdir path.join(__dirname, 's3logs'), 0o0770, (err) =>
+      console.log err if err unless err.code == 'EEXIST'
+
+    @client = knox.createClient {
+      key: opts.key
+      secret: opts.secret
+      bucket: opts.bucket
+    }
     @bufferSize = 0
     @maxSize = opts.maxSize || 20 * 1024 * 1024
 
   log: (level, msg='', meta, cb) ->
     cb null, true if @silent
+    item = JSON.stringify
+            level: level
+            msg: msg
+            time: new Date().toISOString()
+            from: hostname
+    @open (newFileRequired) =>
+      @bufferSize += item.length
+      @_stream.write item
+      this.emit "logged"
+      cb null, true
 
   timeForNewLog: ->
     (@maxSize and @bufferSize >= @maxSize) and
@@ -25,28 +48,43 @@ class winston.transports.S3 extends winston.Transport
     if @opening
       cb true
     else if (!@_stream or @maxSize and @bufferSize >= @maxSize)
+      @_createStream(cb)
       cb true
-      @_createStream()
     else
       cb()
 
-  shipIt: ->
-    @client.putFile @_stream.path, @_s3Path(), (err, res) ->
-      console.log err if err
+  shipIt: (path) ->
+    @client.putFile path, @_s3Path(), (err, res) ->
+      return console.log err if err
+      fs.unlink path, (err) ->
+        console.log err if err
 
   _s3Path: ->
     d = new Date
-    "/#{d.getUTCFullYear}/#{d.getUTCMonth}/#{d.getUTCDate}/#{d.getUTCHours}_#{d.getUTCMinutes}.json"
+    "/#{d.getUTCFullYear()}/#{d.getUTCMonth() + 1}/#{d.getUTCDate()}/#{d.toISOString()}_#{hostname}_#{uuid.v4().slice(0,8)}.json"
+
+  checkUnshipped: ->
+    unshippedFiles = findit.find path.join __dirname, 's3logs'
+    unshippedFiles.on 'file', (path) =>
+      do (path) =>
+        return unless path.match 's3logger.+Z'
+        if @_stream
+          return if path == @_stream.path
+        @shipIt path
 
   _createStream: ->
+    @checkUnshipped()
     @opening = true
     if @_stream
-      @_stream.close() ->
-        @shipIt()
-      @_stream.destroySoon()
+      stream = @_stream
+      stream.end()
+      stream.on 'close', =>
+        @shipIt(stream.path)
+      stream.on 'drain', ->
+      stream.destroySoon()
 
-    @bufferSize = size
-    @_stream = new Tempfile
+    @bufferSize = 0
+    @_stream = new TempFile
     @opening = false
     #
     # We need to listen for drain events when
@@ -70,4 +108,3 @@ class winston.transports.S3 extends winston.Transport
     # than one second.
     #
       @flush()
-

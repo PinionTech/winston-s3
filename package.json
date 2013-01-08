@@ -6,7 +6,9 @@
   "dependencies": {
     "winston": "~0.6.2",
     "aws2js": "~0.7.8",
-    "knox": "~0.4.2"
+    "knox": "~0.4.2",
+    "node-uuid": "~1.4.0",
+    "findit": "~0.1.2"
   },
   "devDependencies": {},
   "scripts": {
