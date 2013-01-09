@@ -15,7 +15,8 @@ class winston.transports.S3 extends winston.Transport
     super
 
     fs.mkdir path.join(__dirname, 's3logs'), 0o0770, (err) =>
-      console.log err if err unless err.code == 'EEXIST'
+      return if err.code == 'EEXIST' if err?
+      console.log err if err
 
     @client = knox.createClient {
       key: opts.key
