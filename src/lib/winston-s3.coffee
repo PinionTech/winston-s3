@@ -70,6 +70,7 @@ class winston.transports.S3 extends winston.Transport
     @shipQueue[path] = path
     @client.putFile path, @_s3Path(), (err, res) =>
       return console.log err if err
+      return console.log "S3 error, code #{res.statusCode}" if res.statusCode != 200
       delete @shipQueue[path]
       fs.unlink path, (err) ->
         console.log err if err
