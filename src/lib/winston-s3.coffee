@@ -64,8 +64,12 @@ class winston.transports.S3 extends winston.Transport
       cb()
 
   shipIt: (path) ->
-    @client.putFile path, @_s3Path(), (err, res) ->
+    @shipQueue = {} if @shipQueue == undefined
+    return if @shipQueue[path]?
+    @shipQueue[path] = path
+    @client.putFile path, @_s3Path(), (err, res) =>
       return console.log err if err
+      delete @shipQueue[path]
       fs.unlink path, (err) ->
         console.log err if err
 
