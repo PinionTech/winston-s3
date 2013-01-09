@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+
+var coffee = require('coffee-script');
+var path = require('path');
+return require(path.join(__dirname,'..','src','lib','cleanup.coffee'));
