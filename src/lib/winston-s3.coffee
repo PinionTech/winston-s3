@@ -86,7 +86,7 @@ class winston.transports.S3 extends winston.Transport
 
   _s3Path: ->
     d = new Date
-    "year=/#{d.getUTCFullYear()}/month=#{d.getUTCMonth() + 1}/day=#{d.getUTCDate()}/#{d.toISOString()}_#{@_id}_#{uuid.v4().slice(0,8)}.json"
+    "/year=#{d.getUTCFullYear()}/month=#{d.getUTCMonth() + 1}/day=#{d.getUTCDate()}/#{d.toISOString()}_#{@_id}_#{uuid.v4().slice(0,8)}.json"
 
   checkUnshipped: ->
     unshippedFiles = findit.find path.resolve @_path
