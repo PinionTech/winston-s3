@@ -28,6 +28,7 @@ class winston.transports.S3 extends winston.Transport
     @_nested = opts.nested || false
     @_path = opts.path || path.resolve __dirname, 's3logs'
     @_temp = opts.temp || false
+    @_debug = opts.debug || false
 
     unless @_temp
       fs.mkdir path.resolve(@_path), 0o0770, (err) =>
@@ -74,9 +75,11 @@ class winston.transports.S3 extends winston.Transport
     @shipQueue = {} if @shipQueue == undefined
     return if @shipQueue[logFilePath]?
     @shipQueue[logFilePath] = logFilePath
+    console.log "@shipQueue is #{JSON.stringify @shipQueue}" if @_debug
     @client.putFile logFilePath, @_s3Path(), (err, res) =>
       return console.log err if err
       return console.log "S3 error, code #{res.statusCode}" if res.statusCode != 200
+      console.log res if @_debug
       delete @shipQueue[logFilePath]
       fs.unlink logFilePath, (err) ->
         console.log err if err
@@ -90,6 +93,7 @@ class winston.transports.S3 extends winston.Transport
     unshippedFiles.on 'file', (logFilePath) =>
       do (logFilePath) =>
         return unless logFilePath.match 's3logger.+Z'
+        console.log "Matched on #{logFilePath}" if @_debug
         if @_stream
           return if path.resolve(logFilePath) == path.resolve(@_stream.path)
         @shipIt logFilePath
@@ -107,6 +111,7 @@ class winston.transports.S3 extends winston.Transport
     @bufferSize = 0
     @_stream = new TempFile @_path, @_temp
     @_path = path.dirname @_stream.path
+    console.log "@_path is #{@_path}" if @_debug
     @checkUnshipped()
     @opening = false
     #
