@@ -65,15 +65,15 @@ class winston.transports.S3 extends winston.Transport
     else
       cb()
 
-  shipIt: (path) ->
+  shipIt: (logFilePath) ->
     @shipQueue = {} if @shipQueue == undefined
-    return if @shipQueue[path]?
-    @shipQueue[path] = path
-    @client.putFile path, @_s3Path(), (err, res) =>
+    return if @shipQueue[logFilePath]?
+    @shipQueue[logFilePath] = logFilePath
+    @client.putFile logFilePath, @_s3Path(), (err, res) =>
       return console.log err if err
       return console.log "S3 error, code #{res.statusCode}" if res.statusCode != 200
-      delete @shipQueue[path]
-      fs.unlink path, (err) ->
+      delete @shipQueue[logFilePath]
+      fs.unlink logFilePath, (err) ->
         console.log err if err
 
   _s3Path: ->
@@ -82,12 +82,15 @@ class winston.transports.S3 extends winston.Transport
 
   checkUnshipped: ->
     unshippedFiles = findit.find path.join @_path, 's3logs'
-    unshippedFiles.on 'file', (path) =>
-      do (path) =>
-        return unless path.match 's3logger.+Z'
+    unshippedFiles.on 'file', (logFilePath) =>
+      do (logFilePath) =>
+        return unless logFilePath.match 's3logger.+Z'
+        console.log @_stream
+        console.log @_stream.path
+        console.log logFilePath
         if @_stream
-          return if path == @_stream.path
-        @shipIt path
+          return if path.resolve(logFilePath) == path.resolve(@_stream.path)
+        @shipIt logFilePath
 
   _createStream: ->
     @checkUnshipped()
