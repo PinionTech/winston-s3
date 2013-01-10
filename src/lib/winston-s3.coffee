@@ -14,10 +14,6 @@ class winston.transports.S3 extends winston.Transport
   constructor: (opts={}) ->
     super
 
-    fs.mkdir path.join(__dirname, 's3logs'), 0o0770, (err) =>
-      return if err.code == 'EEXIST' if err?
-      console.log err if err
-
     @client = knox.createClient {
       key: opts.key
       secret: opts.secret
@@ -28,6 +24,10 @@ class winston.transports.S3 extends winston.Transport
     @_id = opts.id || (require 'os').hostname
     @_nested = opts.nested || false
     @_path = opts.path || __dirname
+
+    fs.mkdir path.join(@_path, 's3logs'), 0o0770, (err) =>
+      return if err.code == 'EEXIST' if err?
+      console.log err if err
 
   log: (level, msg='', meta, cb) ->
     cb null, true if @silent
