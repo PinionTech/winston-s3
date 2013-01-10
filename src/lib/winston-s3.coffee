@@ -6,7 +6,7 @@ findit = require 'findit'
 path = require 'path'
 fork = require('child_process').fork
 TempFile = () ->
-  return fs.createWriteStream path.join __dirname, 's3logs', 's3logger_' + new Date().toISOString()
+  return fs.createWriteStream path.join @_path, 's3logs', 's3logger_' + new Date().toISOString()
 module.exports =
 class winston.transports.S3 extends winston.Transport
   name: 's3'
@@ -27,6 +27,7 @@ class winston.transports.S3 extends winston.Transport
     @maxSize = opts.maxSize || 20 * 1024 * 1024
     @_id = opts.id || (require 'os').hostname
     @_nested = opts.nested || false
+    @_path = opts.path || __dirname
 
   log: (level, msg='', meta, cb) ->
     cb null, true if @silent
