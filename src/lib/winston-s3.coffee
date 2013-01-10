@@ -4,9 +4,12 @@ fs = require 'fs'
 uuid = require 'node-uuid'
 findit = require 'findit'
 path = require 'path'
+temp = require 'temp'
 fork = require('child_process').fork
-TempFile = () ->
-  return fs.createWriteStream path.join @_path, 's3logs', 's3logger_' + new Date().toISOString()
+TempFile = (logFilePath, tempFlag) ->
+  if tempFlag
+    return temp.createWriteStream()
+  return fs.createWriteStream path.join logFilePath, 's3logger_' + new Date().toISOString()
 module.exports =
 class winston.transports.S3 extends winston.Transport
   name: 's3'
@@ -23,11 +26,13 @@ class winston.transports.S3 extends winston.Transport
     @maxSize = opts.maxSize || 20 * 1024 * 1024
     @_id = opts.id || (require 'os').hostname
     @_nested = opts.nested || false
-    @_path = opts.path || __dirname
+    @_path = opts.path || path.resolve __dirname, 's3logs'
+    @_temp = opts.temp || false
 
-    fs.mkdir path.join(@_path, 's3logs'), 0o0770, (err) =>
-      return if err.code == 'EEXIST' if err?
-      console.log err if err
+    unless @_temp
+      fs.mkdir path.resolve(@_path), 0o0770, (err) =>
+        return if err.code == 'EEXIST' if err?
+        console.log err if err
 
   log: (level, msg='', meta, cb) ->
     cb null, true if @silent
@@ -81,19 +86,15 @@ class winston.transports.S3 extends winston.Transport
     "/#{d.getUTCFullYear()}/#{d.getUTCMonth() + 1}/#{d.getUTCDate()}/#{d.toISOString()}_#{@_id}_#{uuid.v4().slice(0,8)}.json"
 
   checkUnshipped: ->
-    unshippedFiles = findit.find path.join @_path, 's3logs'
+    unshippedFiles = findit.find path.resolve @_path
     unshippedFiles.on 'file', (logFilePath) =>
       do (logFilePath) =>
         return unless logFilePath.match 's3logger.+Z'
-        console.log @_stream
-        console.log @_stream.path
-        console.log logFilePath
         if @_stream
           return if path.resolve(logFilePath) == path.resolve(@_stream.path)
         @shipIt logFilePath
 
   _createStream: ->
-    @checkUnshipped()
     @opening = true
     if @_stream
       stream = @_stream
@@ -104,7 +105,9 @@ class winston.transports.S3 extends winston.Transport
       stream.destroySoon()
 
     @bufferSize = 0
-    @_stream = new TempFile
+    @_stream = new TempFile @_path, @_temp
+    @_path = path.dirname @_stream.path
+    @checkUnshipped()
     @opening = false
     #
     # We need to listen for drain events when
