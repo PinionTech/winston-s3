@@ -81,7 +81,7 @@ class winston.transports.S3 extends winston.Transport
     "/#{d.getUTCFullYear()}/#{d.getUTCMonth() + 1}/#{d.getUTCDate()}/#{d.toISOString()}_#{@_id}_#{uuid.v4().slice(0,8)}.json"
 
   checkUnshipped: ->
-    unshippedFiles = findit.find path.join __dirname, 's3logs'
+    unshippedFiles = findit.find path.join @_path, 's3logs'
     unshippedFiles.on 'file', (path) =>
       do (path) =>
         return unless path.match 's3logger.+Z'
