@@ -37,18 +37,15 @@ class winston.transports.S3 extends winston.Transport
 
   log: (level, msg='', meta, cb) ->
     cb null, true if @silent
+    item = {}
     if @_nested
-      item =
-        level: level
-        msg: msg
-        time: new Date().toISOString()
-        id: @_id
+      item.meta = meta if meta?
     else
-      msg = {msg: msg} if typeof msg =='string'
-      item = msg
-      item.s3_level = level
-      item.s3_time = new Date().toISOString()
-      item.s3_id = @_id
+      item = meta if meta?
+    item.s3_msg = msg
+    item.s3_level = level
+    item.s3_time = new Date().toISOString()
+    item.s3_id = @_id
 
     item = JSON.stringify(item) + '\n'
 
