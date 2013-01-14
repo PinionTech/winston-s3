@@ -1,6 +1,6 @@
 {
   "name": "winston-s3",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "S3 transport for Winston",
   "main": "src/lib/winston-s3.js",
   "dependencies": {
