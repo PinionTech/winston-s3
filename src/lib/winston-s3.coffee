@@ -24,7 +24,7 @@ class winston.transports.S3 extends winston.Transport
     }
     @bufferSize = 0
     @maxSize = opts.maxSize || 20 * 1024 * 1024
-    @_id = opts.id || (require 'os').hostname
+    @_id = opts.id || (require 'os').hostname()
     @_nested = opts.nested || false
     @_path = opts.path || path.resolve __dirname, 's3logs'
     @_temp = opts.temp || false
