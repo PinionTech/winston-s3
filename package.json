@@ -4,7 +4,7 @@
   "description": "S3 transport for Winston",
   "main": "src/lib/winston-s3.js",
   "dependencies": {
-    "winston": "~0.6.2",
+    "winston": "~0.7.2",
     "knox": "~0.4.2",
     "node-uuid": "~1.4.0",
     "findit": "~0.1.2",
