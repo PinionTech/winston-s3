@@ -6,6 +6,7 @@ findit = require 'findit'
 path = require 'path'
 temp = require 'temp'
 fork = require('child_process').fork
+MAXSHIP = 5
 TempFile = (logFilePath, tempFlag) ->
   if tempFlag
     return temp.createWriteStream()
@@ -69,17 +70,35 @@ class winston.transports.S3 extends winston.Transport
       cb()
 
   shipIt: (logFilePath) ->
+    @queueIt logFilePath
+
+  queueIt: (logFilePath) ->
     @shipQueue = {} if @shipQueue == undefined
     return if @shipQueue[logFilePath]?
     @shipQueue[logFilePath] = logFilePath
     console.log "@shipQueue is #{JSON.stringify @shipQueue}" if @_debug
+    @_shipNow()
+
+  _shipNow: ->
+    @shipping = 0 if !@shipping?
+    return if @shipping >= MAXSHIP
+    keys = Object.keys @shipQueue
+    return if keys.length < 1
+    @shipping++
+    logFilePath = keys[0]
+    delete @shipQueue[logFilePath]
     @client.putFile logFilePath, @_s3Path(), (err, res) =>
-      return console.log err if err
-      return console.log "S3 error, code #{res.statusCode}" if res.statusCode != 200
+      @shipping--
+      @_shipNow()
+      if err?
+        @shipQueue[logFilePath] = logFilePath
+        return console.log err
+      if res.statusCode != 200
+        @shipQueue[logFilePath] = logFilePath
+        return console.log "S3 error, code #{res.statusCode}"
       console.log res if @_debug
-      delete @shipQueue[logFilePath]
       fs.unlink logFilePath, (err) ->
-        console.log err if err
+        return console.log err if err
 
   _s3Path: ->
     d = new Date
