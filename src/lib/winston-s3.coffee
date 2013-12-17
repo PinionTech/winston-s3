@@ -91,7 +91,7 @@ class winston.transports.S3 extends winston.Transport
       @shipping--
       @_shipNow()
       if err?
-        @shipQueue[logFilePath] = logFilePath
+        @shipQueue[logFilePath] = logFilePath unless err.code is 'ENOENT'
         return console.log 'Error shipping file', err
       if res.statusCode != 200
         @shipQueue[logFilePath] = logFilePath
