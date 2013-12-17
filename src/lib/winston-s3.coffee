@@ -22,6 +22,7 @@ class winston.transports.S3 extends winston.Transport
       key: opts.key
       secret: opts.secret
       bucket: opts.bucket
+      region: opts.region
     }
     @bufferSize = 0
     @maxSize = opts.maxSize || 20 * 1024 * 1024
