@@ -34,7 +34,7 @@ class winston.transports.S3 extends winston.Transport
     unless @_temp
       fs.mkdir path.resolve(@_path), 0o0770, (err) =>
         return if err.code == 'EEXIST' if err?
-        console.log err if err
+        console.log('Error creating temp dir', err) if err
 
   log: (level, msg='', meta, cb) ->
     cb null, true if @silent
@@ -92,13 +92,13 @@ class winston.transports.S3 extends winston.Transport
       @_shipNow()
       if err?
         @shipQueue[logFilePath] = logFilePath
-        return console.log err
+        return console.log 'Error shipping file', err
       if res.statusCode != 200
         @shipQueue[logFilePath] = logFilePath
         return console.log "S3 error, code #{res.statusCode}"
       console.log res if @_debug
       fs.unlink logFilePath, (err) ->
-        return console.log err if err
+        return console.log('Error unlinking file', err) if err
 
   _s3Path: ->
     d = new Date
