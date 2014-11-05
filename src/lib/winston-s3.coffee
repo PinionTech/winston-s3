@@ -31,6 +31,7 @@ class winston.transports.S3 extends winston.Transport
     @_path = opts.path || path.resolve __dirname, 's3logs'
     @_temp = opts.temp || false
     @_debug = opts.debug || false
+    @_headers = opts.headers || {}
 
     unless @_temp
       fs.mkdir path.resolve(@_path), 0o0770, (err) =>
@@ -88,7 +89,7 @@ class winston.transports.S3 extends winston.Transport
     @shipping++
     logFilePath = keys[0]
     delete @shipQueue[logFilePath]
-    @client.putFile logFilePath, @_s3Path(), (err, res) =>
+    @client.putFile logFilePath, @_s3Path(), @_headers, (err, res) =>
       @shipping--
       @_shipNow()
       if err?
