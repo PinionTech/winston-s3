@@ -1,11 +1,11 @@
 {
   "name": "winston-s3",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "S3 transport for Winston",
   "main": "src/lib/winston-s3.js",
   "dependencies": {
     "winston": "~0.7.2",
-    "knox": "~0.4.2",
+    "knox": "~0.9.1",
     "node-uuid": "~1.4.0",
     "findit": "~0.1.2",
     "coffee-script": "~1.4.0",

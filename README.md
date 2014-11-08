@@ -27,6 +27,7 @@ winston.add(winstonS3, {
   , path: // defaults to 's3Logs'
   , temp: false
   , debug: false
+  , headers: {} //headers that will be passed along to knox for the http requests
 })
 
 ```
