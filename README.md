@@ -13,7 +13,7 @@ npm i -S winston winston-s3
 
 ```js
 var winston = require('winston')
-  , winstonS3 = require('winston-s3').S3
+  , winstonS3 = require('winston-s3')
 
 winston.add(winstonS3, {
   key: 's3-key'
