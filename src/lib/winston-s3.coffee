@@ -10,7 +10,7 @@ MAXSHIP = 5
 TempFile = (logFilePath, tempFlag) ->
   if tempFlag
     return temp.createWriteStream()
-  return fs.createWriteStream path.join logFilePath, 's3logger_' + new Date().toISOString()
+  return fs.createWriteStream path.join logFilePath, 's3logger_' + (new Date().toISOString()).replace(/:/g, '_')
 module.exports =
 class winston.transports.S3 extends winston.Transport
   name: 's3'
