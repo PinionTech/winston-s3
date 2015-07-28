@@ -125,12 +125,13 @@ class winston.transports.S3 extends winston.Transport
         @shipIt(stream.path)
       stream.on 'drain', ->
       stream.destroySoon()
-
+    else
+      @checkUnshipped()
+      
     @bufferSize = 0
     @_stream = new TempFile @_path, @_temp
     @_path = path.dirname @_stream.path
     console.log "@_path is #{@_path}" if @_debug
-    @checkUnshipped()
     @opening = false
     #
     # We need to listen for drain events when
