@@ -19,6 +19,7 @@ winston.add(winstonS3, {
   key: 's3-key'
   , secret: 's3-secret'
   , bucket: 'bucket-name'
+  , region: 'us-east-1' // default
   
   // optional
   , maxSize: 20 * 1024 * 1024 // default
